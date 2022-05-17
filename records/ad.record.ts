@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import { AdEntity, NewAdEntity } from '../types';
 import { ValidationError } from '../utils/errors';
 import { pool } from '../utils/db';
@@ -45,11 +46,35 @@ export class AdRecord implements AdEntity {
         this.lon = obj.lon;
     }
 
-    static async getOne(id: string): Promise<AdRecord> | null {
-        const [results] = await pool.execute("SELECT * FROM `ads` WHERE id = :id", {
+    static async getOne(id: string): Promise<AdRecord | null> {
+        const [results] = await pool.execute("SELECT * FROM `ads` WHERE id = :id;", {
             id,
         }) as AdRecordResults;
 
         return results.length === 0 ? null : new AdRecord(results[0]);
+    }
+
+    static async getAll(): Promise<AdRecord[] | null> {
+        const [results] = await pool.execute("SELECT * FROM `ads`;") as AdRecordResults;
+
+        return results.length === 0 ? null : results.map(result => new AdRecord(result));
+    }
+
+    async insert(): Promise<string> {
+        if (!this.id) {
+            this.id = uuid();
+        }
+
+        await pool.execute("INSERT INTO `ads` VALUES (:id, :name, :description, :price, :url, :lat, :lon);", {
+            id: this.id,
+            name: this.name,
+            description: this.description,
+            price: this.price,
+            url: this.url,
+            lat: this.lat,
+            lon: this.lon,
+        });
+
+        return this.id;
     }
 }
