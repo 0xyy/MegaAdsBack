@@ -9,12 +9,11 @@ const defaultObj = {
     lon: 9,
 };
 
-
 test('Can build AdRecord', () => {
-   const ad = new AdRecord(defaultObj);
+    const ad = new AdRecord(defaultObj);
 
-   expect(ad.name).toBe('Bob');
-   expect(ad.description).toBe('lol');
+    expect(ad.name).toBe('Bob');
+    expect(ad.description).toBe('lol');
 });
 
 test('Validates invalid price', () => {
@@ -25,3 +24,13 @@ test('Validates invalid price', () => {
 });
 
 // @TODO: Check all the validations
+test('Validates invalid description', () => {
+    let description = '';
+    for (let i = 0; i < 1001; i++) {
+        description += 'a';
+    }
+    expect(() => new AdRecord({
+        ...defaultObj,
+        description,
+    })).toThrow('Treść ogłoszenia nie może przekraczać 1000 znaków.');
+});
