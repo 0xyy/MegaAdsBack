@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { AdEntity, NewAdEntity } from '../types';
+import { AdEntity, NewAdEntity, SimpleAdEntity } from '../types';
 import { ValidationError } from '../utils/errors';
 import { pool } from '../utils/db';
 import { FieldPacket } from 'mysql2';
@@ -47,17 +47,27 @@ export class AdRecord implements AdEntity {
     }
 
     static async getOne(id: string): Promise<AdRecord | null> {
-        const [results] = await pool.execute("SELECT * FROM `ads` WHERE id = :id;", {
+        const [results] = await pool.execute("SELECT * FROM `ads` WHERE `id` = :id;", {
             id,
         }) as AdRecordResults;
 
         return results.length === 0 ? null : new AdRecord(results[0]);
     }
 
-    static async getAll(): Promise<AdRecord[] | null> {
-        const [results] = await pool.execute("SELECT * FROM `ads`;") as AdRecordResults;
+    static async findAll(name: string): Promise<SimpleAdEntity[]> {
+        const [results] = await pool.execute("SELECT * FROM `ads` WHERE `name` LIKE :search;", {
+            search: `%${name}%`,
+        }) as AdRecordResults;
 
-        return results.length === 0 ? null : results.map(result => new AdRecord(result));
+        return results.map(result => {
+            const {
+                id, lat, lon,
+            } = result;
+
+            return {
+                id, lat, lon,
+            };
+        });
     }
 
     async insert(): Promise<string> {
